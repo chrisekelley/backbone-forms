@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <script id="form-template" type="text/x-handlebars-template">
+    <h2>{{formname}}</h2>
+    {{#each items}}
+    <tr>
+      <td>
+        <label for='{{id}}'>{{label}}</label>
+      </td>
+      <td>
+        <input {{#options}}data-{{name}}='{{value}}' {{/options}} id='{{id}}' type='{{type}}'></input>
+      </td>
+    </tr>
+      {{/each}}
+    </script>
+  </head>
+  <body>
+  	<h1>The form!</h1>
+    <form>
+      <table id='form-elements'>
+      </table>
+    </form>
+  </body>
+    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="backbone-min.js"></script>
+    <script type="text/javascript">
+      
+       var Form = Backbone.Model.extend({
+      });
+
+	// view of the form-elements table
+      var FormView = Backbone.View.extend({
+
+        el: $("#form-elements"),
+
+        initialize: function (){
+        },
+        
+        template: Handlebars.compile($("#form-template").html()),
+
+        render: function(){
+        //alert(JSON.stringify(eval(this.model)));
+          var html = this.template(this.model);
+          //alert("html: " + JSON.stringify(html));
+          $(this.el).html(html);
+          return this;
+        }
+      });
+
+      var form = new Form(
+		{
+      	id : 24,
+      	formname : "Registration",
+      	items: [{
+          "id": "A4X",
+          "label": "First Name",
+          "options": [
+            {
+              "name": "optional",
+              "value": "true"
+            }
+          ],
+          "type": "text"
+        }, {
+          "id": "G4R",
+          "label": "Last Name",
+          "options": [
+            {
+            "name": "optional",
+            "value":  "false"
+            }
+          ],
+          "type": "text"
+        }
+        ],
+        }
+      )
+      ;
+
+var formArray = 
+      //new Form(
+		{
+      	id : 24,
+      	formname : "Registration",
+      	items: [{
+          "id": "A4X",
+          "label": "First Name",
+          "options": [
+            {
+              "name": "optional",
+              "value": "true"
+            }
+          ],
+          "type": "text"
+        }, {
+          "id": "G4R",
+          "label": "Last Name",
+          "options": [
+            {
+            "name": "optional",
+            "value":  "false"
+            }
+          ],
+          "type": "text"
+        }
+        ],
+        }
+     // )
+      ;
+
+      formView = new FormView();
+      //formView.collection = form;
+      //var formObjectArray = $.makeArray(form);
+      var formObjectArray = JSON.parse(JSON.stringify(form));
+      // alert(JSON.stringify(formArray) + "\n" + JSON.stringify(formObjectArray));
+      formView.model = formObjectArray;
+      formView.render();
+    </script>
+</html>
+
