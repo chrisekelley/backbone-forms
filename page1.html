@@ -1,0 +1,251 @@
+<html>
+  <head>
+  	<script id="page-example-template" type="text/x-handlebars-template">
+    <h2>{{formname}}</h2>
+    </script>
+    <script id="form-element-template" type="text/x-handlebars-template">
+      <td>
+        <label for='{{id}}'>{{label}}</label>
+      </td>
+      <td>
+      	 <input id='{{id}}' type='{{type}}'></input>
+      </td>
+    </script>
+  </head>
+  <body>
+  	<div id='pageApp'>
+  		
+  	</div>
+  	<form>
+      <table id='form-elements'>
+      </table>
+    </form>
+  </body>
+    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="backbone-min.js"></script>
+    <script type="text/javascript">
+    
+    
+	//Handlebars.registerHelper('helperMissing', function(context) {return ""; });
+	
+  	var PageDef = Backbone.Model.extend({
+  		
+ /*
+      initialize: function (){
+         new PageDef(
+             {
+             formname: "",
+             items: new FieldList
+             }
+         )
+     }*/
+ 
+	});
+	
+	var FormElement = Backbone.Model.extend({
+	});
+
+	var FieldList = Backbone.Collection.extend({
+	model: FormElement
+	});
+
+	Fields = new FieldList;
+
+	var FormElementView = Backbone.View.extend({
+
+	tagName: "tr",
+
+	template: Handlebars.compile($("#form-element-template").html()),
+
+	initialize: function (){
+		this.model.bind('change', this.render, this);
+		this.model.view = this;
+		//alert("FormElementView initialize: " + JSON.stringify( this.model));
+	},
+
+	render: function(){
+		//var formElementArray = JSON.parse(JSON.stringify(this.model));
+		//alert(JSON.stringify(this.model) + "\n\n" + JSON.stringify(formElementArray) );
+		//alert(typeof formElementArray);
+		$(this.el).html(this.template(this.model.toJSON()));
+		//$(this.el).html(this.template(this.model));
+		//alert("FormElementView render: " +  JSON.stringify(this));
+		return this;
+	}
+
+	});
+
+	// The application
+	var FormView = Backbone.View.extend({
+
+	el: $("#form-elements"),
+
+	initialize: function (){
+		//alert(" this.model: " +  JSON.stringify( this.model));
+		
+		var formObjectArray = JSON.parse(JSON.stringify(page1));
+		//pageView.model = formObjectArray;
+		
+		//Fields = formObjectArray.items;
+		//alert("items1: " +  JSON.stringify( page1.get('items')) + "\n" + "items2: " + JSON.stringify(formItems));
+		
+		//formItems = new FieldList();
+		
+		Fields = page1.get('items');
+	},
+
+	render: function(){
+		$.each(Fields, function (i, item) { 
+			//alert("item: " +  JSON.stringify(item));
+			var formElement = new FormElement(
+		{
+			"id": item.id,
+			"label": item.label,
+			"type": item.type,
+			"options": [
+			{
+			"name": item.options[0].name,
+			"value": item.options[0].value
+			}
+			]
+		}
+		);
+		//alert("formElement: " +  JSON.stringify(formElement));
+			var view = new FormElementView({model: formElement});
+			//var html = view.render();
+			//alert("view: " +  JSON.stringify(this.$("#form-elements")));
+			// alert("this" +  JSON.stringify($("#form-elements")));
+			$("#form-elements").append(view.render().el);
+			});
+	},
+
+	});
+
+	// The application
+	var PageView = Backbone.View.extend({
+
+	el: $("#pageApp"),
+	
+	template: Handlebars.compile($("#page-example-template").html()),
+
+	initialize: function (){
+		//alert("page1: " +  JSON.stringify(page1));
+		//this.model = page1;
+		/*
+		formView = new FormView();
+				alert("this.model in init pageview: " +  JSON.stringify(this.model));
+				formView.model = this.model;
+				formView.render();*/
+		
+	},
+
+	render: function(){
+        //alert(JSON.stringify(eval(this.model)));
+        //alert("this.model in render: " +  JSON.stringify(this.model));
+          var html = this.template(this.model);
+          //alert("html: " + JSON.stringify(html));
+          $(this.el).html(html);
+          return this;
+        }
+	});
+
+	
+	var page1 = new PageDef(
+		{
+      	formname : "Registration",
+      	items: [
+			{
+			"id": "A4X",
+			"label": "First Name",
+			"options": [
+			{
+			"name": "optional",
+			"value": "true"
+			}
+			],
+			"type": "text"
+			}, {
+			"id": "G4R",
+			"label": "Last Name",
+			"options": [
+			{
+			"name": "optional",
+			"value":  "false"
+			}
+			],
+			"type": "text"
+			}, {
+			"id": "LP3",
+			"label": "Age",
+			"options": [
+			{
+			"name": "absolute-max",
+			"value": "130"
+			}, {
+			"name": "absolute-min",
+			"value": "0"
+			}, {
+			"name": "max",
+			"value": "95"
+			}
+			],
+			"type": "number"
+			}
+        ]
+        }
+      );
+      
+      var formItems = new FieldList([
+	{
+	"id": "A4X",
+	"label": "First Name",
+	"options": [
+	{
+	"name": "optional",
+	"value": "true"
+	}
+	],
+	"type": "text"
+	}, {
+	"id": "G4R",
+	"label": "Last Name",
+	"options": [
+	{
+	"name": "optional",
+	"value":  "false"
+	}
+	],
+	"type": "text"
+	}, {
+	"id": "LP3",
+	"label": "Age",
+	"options": [
+	{
+	"name": "absolute-max",
+	"value": "130"
+	}, {
+	"name": "absolute-min",
+	"value": "0"
+	}, {
+	"name": "max",
+	"value": "95"
+	}
+	],
+	"type": "number"
+	}
+	]);
+
+	pageView = new PageView;
+	//pageView.model = page1;
+	var formObjectArray = JSON.parse(JSON.stringify(page1));
+	pageView.model = formObjectArray;
+	pageView.render();
+	formView = new FormView();
+	//alert("this.model in init pageview: " +  JSON.stringify(this.model));
+	formView.model = formObjectArray;
+	formView.render();
+
+    </script>
+</html>
