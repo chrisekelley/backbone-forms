@@ -1,0 +1,119 @@
+<html>
+  <head>
+    <script id="form-element-template" type="text/x-handlebars-template">
+      <td>
+        <label for='{{id}}'>{{label}}</label>
+      </td>
+      <td>
+        <input {{#options}}data-{{name}}='{{value}}' {{/options}} id='{{id}}' type='{{type}}'></input>
+      </td>
+    </script>
+  </head>
+  <body>
+    <form>
+      <table id='form-elements'>
+      </table>
+    </form>
+  </body>
+    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="backbone-min.js"></script>
+    <script type="text/javascript">
+      
+  	var FormElement = Backbone.Model.extend({
+	});
+
+	var FieldList = Backbone.Collection.extend({
+	model: FormElement
+	});
+
+	Fields = new FieldList;
+
+	var FormElementView = Backbone.View.extend({
+
+	tagName: "tr",
+
+	template: Handlebars.compile($("#form-element-template").html()),
+
+	initialize: function (){
+		this.model.bind('change', this.render, this);
+		this.model.view = this;
+	},
+
+	render: function(){
+		$(this.el).html(this.template(this.model.toJSON()));
+		return this;
+	}
+
+	});
+
+	// The application
+	var FormView = Backbone.View.extend({
+
+	el: $("#form-elements"),
+
+	initialize: function (){
+	Fields = formItems;
+	},
+
+	render: function(){
+		Fields.each(this.addOne);
+	},
+
+	addOne: function(formElement) {
+		var view = new FormElementView({model: formElement});
+		this.$("#form-elements").append(view.render().el);
+	},
+
+	addAll: function() {
+		Fields.each(this.addOne);
+	}
+
+	});
+
+	var formItems = new FieldList([
+	{
+	"id": "A4X",
+	"label": "First Name",
+	"options": [
+	{
+	"name": "optional",
+	"value": "true"
+	}
+	],
+	"type": "text"
+	}, {
+	"id": "G4R",
+	"label": "Last Name",
+	"options": [
+	{
+	"name": "optional",
+	"value":  "false"
+	}
+	],
+	"type": "text"
+	}, {
+	"id": "LP3",
+	"label": "Age",
+	"options": [
+	{
+	"name": "absolute-max",
+	"value": "130"
+	}, {
+	"name": "absolute-min",
+	"value": "0"
+	}, {
+	"name": "max",
+	"value": "95"
+	}
+	],
+	"type": "number"
+	}
+	]);
+
+	formView = new FormView();
+	formView.render();
+
+    </script>
+</html>
