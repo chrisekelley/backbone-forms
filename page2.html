@@ -1,0 +1,164 @@
+<html>
+  <head>
+  	<script id="page-example-template" type="text/x-handlebars-template">
+    <h2>{{formname}}</h2>
+    </script>
+    <script id="form-element-template" type="text/x-handlebars-template">
+      <td>
+        <label for='{{id}}'>{{label}}</label>
+      </td>
+      <td>
+        <input {{#options}}data-{{name}}='{{value}}' {{/options}} id='{{id}}' type='{{type}}'></input>
+      </td>
+    </script>
+  </head>
+  <body>
+      	<div id='pageApp'></div>
+  	<form>
+      <table id='form-elements'>
+      </table>
+    </form>
+  </body>
+    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="backbone-min.js"></script>
+    <script type="text/javascript">
+
+      Backbone.sync = function(method, model) {
+        alert(method + ": " + JSON.stringify(model));
+      };
+      
+      var FormElement = Backbone.Model.extend({
+        validate: function(attributes){
+          console.log("Validating")
+        }
+      });
+
+      var Form = Backbone.Collection.extend({
+        model: FormElement
+      });
+
+      var FormElementView = Backbone.View.extend({
+
+        tagName: "tr",
+
+        template: Handlebars.compile($("#form-element-template").html()),
+
+        initialize: function (){
+          this.model.bind('change', this.render, this);
+          this.model.view = this;
+        },
+
+        events: {
+          "change" : "save"
+        },
+
+        save: function() {
+          this.model.set({value: this.$("input").val()});
+          this.model.save
+        },
+
+        render: function(){
+          $(this.el).html(this.template(this.model.toJSON()));
+          return this;
+        }
+      });
+
+	// The form
+      var FormView = Backbone.View.extend({
+
+        el: $("#form-elements"),
+
+        initialize: function (){
+          _.bindAll(this, "render", "addOne");
+        },
+
+        render: function(){
+          this.collection.each(this.addOne); // don't understand syntax
+          return this;
+        },
+
+        addOne: function(formElement){
+        	console.log("formElement: " + JSON.stringify(formElement));
+          var formElementView = new FormElementView({model: formElement});
+          $(this.el).append(formElementView.render().el);
+        }
+
+      });
+      
+	// The application
+	var PageView = Backbone.View.extend({
+
+	el: $("#pageApp"),
+	
+	template: Handlebars.compile($("#page-example-template").html()),
+
+	initialize: function (){
+		
+	},
+
+	render: function(){
+          var html = this.template(this.model);
+          $(this.el).html(html);
+          return this;
+        }
+	});
+
+	var formDef = {
+      	"formname" : "Registration",
+      	"items": [
+			{
+			"id": "A4X",
+			"label": "First Name",
+			"options": [
+			{
+			"name": "optional",
+			"value": "true"
+			}
+			],
+			"type": "text"
+			}, {
+			"id": "G4R",
+			"label": "Last Name",
+			"options": [
+			{
+			"name": "optional",
+			"value":  "false"
+			}
+			],
+			"type": "text"
+			}, {
+			"id": "LP3",
+			"label": "Age",
+			"options": [
+			{
+			"name": "absolute-max",
+			"value": "130"
+			}, {
+			"name": "absolute-min",
+			"value": "0"
+			}, {
+			"name": "max",
+			"value": "95"
+			}
+			],
+			"type": "number"
+			}
+        ]
+        };
+
+	pageView = new PageView;
+	var obj = jQuery.parseJSON(JSON.stringify(formDef));
+	console.log("obj1 : " + JSON.stringify(obj.items));
+	pageView.model = obj;
+	pageView.render();
+	formView = new FormView();
+	console.log("obj formname: " + obj.formname);
+	var itemsCol = new Backbone.Collection;
+	itemsCol.add(obj.items);
+	formView.collection = itemsCol;
+	formView.render(); 
+    </script>
+</html>
+
