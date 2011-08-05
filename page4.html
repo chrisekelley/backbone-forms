@@ -1,0 +1,180 @@
+<html>
+  <head>
+    <script id="form-element-template" type="text/x-handlebars-template">
+      <td>
+        <label for='{{id}}'>{{label}}</label>
+      </td>
+      <td>
+        <input {{#options}}data-{{name}}='{{value}}' {{/options}} id='{{id}}' type='{{type}}' value='{{value}}'></input>
+      </td>
+       <td class='error-message' style='display:none'>
+      </td>
+    </script>
+  </head>
+  <body>
+    <form>
+      <table id='form-elements'>
+      </table>
+    </form>
+  </body>
+    <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="backbone-min.js"></script>
+    <script type="text/javascript">
+    // If you have problems diagnosing a helperMissing error, uncomment the following line.
+     Handlebars.registerHelper('helperMissing', function(context) {console.log("helperMissing: " + context); return ""; });
+      Backbone.sync = function(method, model) {
+        // TODO replace this with couchdb plugin
+        console.log(method + ": " + JSON.stringify(model));
+      };
+
+      /****** Models *******/
+
+      var FormElement = Backbone.Model.extend({
+        initialize: function(){
+        	//console.log("Init the model: " +  JSON.stringify(this));
+        	//this.set({value: ""});
+        },
+        validate: function(attributes){
+        	console.log("validate in FormElement: " +  JSON.stringify(attributes));
+          var validationErrors = [];
+          _.each(this.get("options"), function(option){
+            switch (option.name){
+              case "optional":
+                if (option.value == "false" && attributes.value == ""){
+                	console.log("init: " + this.get("init"));
+                	if (this.get("init") == "yes" ) {
+                		console.log("Ignoring the init.");
+                		this.set({init: "no"});
+                	} else {
+                	console.log("Error: value is empty ");
+                    validationErrors.push(this.get("label") + " is required");
+                	}
+                  }
+                break;
+              // TODO
+              case "absolute-min":
+                break;
+              case "absolute-max":
+              if (parseInt(attributes.value) > parseInt(option.value)){
+                    validationErrors.push(this.get("label") + " is too high. Value: " + attributes.value + " Max value: " + option.value);
+                  }
+                break;
+              case "max":
+                break;
+              case "min":
+                break;
+              default:
+                validationErrors.push("'"+ this.option.name + "' not supported as a validation option");
+            }
+          }, this); // Need the "this" here to be able to call this.get("label") above
+          return _.any(validationErrors) ? validationErrors : null;
+        },
+      });
+
+      var Form = Backbone.Collection.extend({
+        model: FormElement
+      });
+
+      /****** Views ******/
+
+      var FormElementView = Backbone.View.extend({
+        tagName: "tr",
+        template: Handlebars.compile($("#form-element-template").html()),
+        initialize: function (){
+          //this.model.bind('change', this.render, this);
+          this.model.bind('error', this.error, this);
+          this.model.view = this;
+        },
+        events: {
+          "change" : "save",
+        },
+        save: function() {
+          // clear old error messages before validation occurs
+          this.$(".error-message").html("").hide(); 
+          console.log("Saving from FormElementView.");
+          this.model.save({value: this.$("input").val()});
+          return this;
+        },
+        render: function(){
+        //console.log("Rendering from FormElementView: " + JSON.stringify(this.model));
+          $(this.el).html(this.template(this.model.toJSON()));
+          return this;
+        },
+        error: function (model, error){
+        console.log("Error in FormElementView: " + error);
+          this.$(".error-message").html(error.join(". ")).show()
+        },
+      });
+
+      var FormView = Backbone.View.extend({
+        el: $("#form-elements"),
+        initialize: function (){
+          _.bindAll(this, "render", "addOne");
+          return this;
+        },
+        render: function(){
+          this.collection.each(this.addOne); // don't understand syntax
+          return this;
+        },
+        addOne: function(formElement){
+        	console.log("AddOne: " + JSON.stringify(formElement));
+          $(this.el).append((new FormElementView({model: formElement})).render().el)
+        },
+      });
+
+
+      var form = new Form([
+        {
+          "id": "A4X",
+          "label": "First Name",
+          "value": "Mike",
+          "options": [
+            {
+              "name": "optional",
+              "value": "true"
+            }
+          ],
+          "type": "text",
+          "init":"yes"
+        }, {
+          "id": "G4R",
+          "label": "Last Name",
+          "value": "",
+          "options": [
+            {
+            "name": "optional",
+            "value":  "false"
+            }
+          ],
+          "type": "text",
+          "init":"yes"
+        }, {
+          "id": "LP3",
+          "label": "Age",
+          "value": "",
+          "options": [ 
+            {
+              "name": "absolute-max",
+              "value": "130"
+            }, {
+              "name": "absolute-min",
+              "value": "0"
+            }, {
+              "name": "max",
+              "value": "95"
+            }
+          ],
+          "type": "number",
+          "init":"yes"
+        }
+      ]);
+
+      formView = new FormView();
+      formView.collection = form;
+      formView.render();
+
+    </script>
+</html>
+
